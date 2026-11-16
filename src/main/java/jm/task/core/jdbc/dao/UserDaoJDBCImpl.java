@@ -24,9 +24,14 @@ public class UserDaoJDBCImpl implements UserDao {
                 "age TINYINT)";
 
         try (Statement statement = connection.createStatement()) {
+            connection.setAutoCommit(false);
             statement.executeUpdate(sql);
+            connection.commit();
         } catch (SQLException e) {
+            connectionRollback();
             e.printStackTrace();
+        } finally {
+            setAutoCommitTrue();
         }
     }
 
@@ -35,9 +40,14 @@ public class UserDaoJDBCImpl implements UserDao {
         String sql = "DROP TABLE IF EXISTS users";
 
         try (Statement statement = connection.createStatement()) {
+            connection.setAutoCommit(false);
             statement.executeUpdate(sql);
+            connection.commit();
         } catch (SQLException e) {
+            connectionRollback();
             e.printStackTrace();
+        } finally {
+            setAutoCommitTrue();
         }
     }
 
@@ -47,12 +57,17 @@ public class UserDaoJDBCImpl implements UserDao {
         String sql = "INSERT INTO users (name, lastName, age) VALUES (?, ?, ?)";
 
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            connection.setAutoCommit(false);
             preparedStatement.setString(1, name);
             preparedStatement.setString(2, lastName);
             preparedStatement.setByte(3, age);
             preparedStatement.executeUpdate();
+            connection.commit();
         } catch (SQLException e) {
+            connectionRollback();
             e.printStackTrace();
+        } finally {
+            setAutoCommitTrue();
         }
     }
 
@@ -62,10 +77,15 @@ public class UserDaoJDBCImpl implements UserDao {
         String sql = "DELETE FROM users WHERE id = ?";
 
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            connection.setAutoCommit(false);
             preparedStatement.setLong(1, id);
             preparedStatement.executeUpdate();
+            connection.commit();
         } catch (SQLException e) {
+            connectionRollback();
             e.printStackTrace();
+        } finally {
+            setAutoCommitTrue();
         }
     }
 
@@ -98,9 +118,36 @@ public class UserDaoJDBCImpl implements UserDao {
         String sql = "TRUNCATE TABLE users";
 
         try (Statement statement = connection.createStatement()) {
+            connection.setAutoCommit(false);
             statement.executeUpdate(sql);
+            connection.commit();
         } catch (SQLException e) {
+            connectionRollback();
             e.printStackTrace();
+        } finally {
+            setAutoCommitTrue();
+        }
+    }
+
+    // Метод для отката транзакции
+    private void connectionRollback() {
+        try {
+            if (connection != null) {
+                connection.rollback();
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    // Метод для возврата autoCommit
+    private void setAutoCommitTrue() {
+        try {
+            if (connection != null) {
+                connection.setAutoCommit(true);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
         }
     }
 }
